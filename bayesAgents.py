@@ -94,20 +94,23 @@ def constructBayesNet(gameState):
     # Edges filled out by (from, to) pairs for each of Bayes Net edge
 
     for obs in obsVars:
-        edges.append((GHOST_HOUSE_VAR, obs))
-        edges.append((FOOD_HOUSE_VAR, obs))
-        variableDomainsDict[obs] = OBS_VALS
-
-    for h in HOUSE_VARS:
-        edges.append((X_POS_VAR, h))
-        edges.append((Y_POS_VAR, h))    
-        variableDomainsDict[h] = HOUSE_VALS
-
+        for h in HOUSE_VARS:
+            edges.append((h, obs))
+            if (X_POS_VAR, h) not in edges:
+                edges.append((X_POS_VAR, h))
+            if (Y_POS_VAR, h) not in edges:
+                edges.append((Y_POS_VAR, h))
    
-    # remaining variableDomainsDict filled out by assigning each var a value
+    # variableDomainsDict filled out by assigning each var a value
 
-    variableDomainsDict[X_POS_VAR] = X_POS_VALS
-    variableDomainsDict[Y_POS_VAR] = Y_POS_VALS
+    all_vars = [[obsVars, OBS_VALS], [HOUSE_VARS, HOUSE_VALS], [X_POS_VAR, X_POS_VALS], [Y_POS_VAR, Y_POS_VALS]]
+    
+    for var in all_vars:
+        if type(var[0]) is list:
+            for val in var[0]:
+                variableDomainsDict[val] = var[1]
+        else:
+            variableDomainsDict[var[0]] = var[1]
 
     #util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"

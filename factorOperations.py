@@ -88,37 +88,44 @@ def joinFactors(factors):
 
 
     "*** YOUR CODE HERE ***"
-
-    # Set of conditional and unconditional variables
     
-    cond = set()
-    uncond = set()
+    # Collection of conditional and unconditional variables
+    cond = []
+    uncond = []
 
     # Adding conditional and unconditional variables resp.
     for fac in factors:
         c = fac.conditionedVariables()
         uc = fac.unconditionedVariables()
-        cond = cond.union(c)
-        uncond = uncond.union(uc)
 
-    # Removing var which are in uncond from cond (by set difference) 
-    cond = cond - uncond
+        for c_ele in c:
+            if c_ele not in cond:
+                cond.append(c_ele)
+
+        for uc_ele in uc:
+            if uc_ele not in uncond:
+                uncond.append(uc_ele)
+
+
+    # Removing var which are in uncond from cond (by set difference)
+    cond = list(set(cond) - set(uncond))
 
     # Factor (Unassigned) 
     fact_top = list(factors)[0]
     dom = fact_top.variableDomainsDict()
     fact_comb = Factor(uncond, cond, dom)
-    
-    # Assigning Probabilities
 
+    # Assigning Probabilities
+    p = 1
     for assig in fact_comb.getAllPossibleAssignmentDicts():
-        p = 1
+    
         for fac in factors:
             fact_prob = fac.getProbability(assig)
             p = p * fact_prob
+            
         fact_comb.setProbability(assig, p)
+        p = 1
 
-    
     return fact_comb
     
     #util.raiseNotDefined()
@@ -171,13 +178,27 @@ def eliminateWithCallTracking(callTrackingList=None):
                     "unconditionedVariables: " + str(factor.unconditionedVariables()))
 
         "*** YOUR CODE HERE ***"
+
         # As single factor, conditional and unconditional variables added directly
 
-        cond = factor.conditionedVariables()
-        uncond = factor.unconditionedVariables()
+        cond = []
+        uncond = []
+
+        c = factor.conditionedVariables()
+        uc = factor.unconditionedVariables()
+
+        for c_ele in c:
+            if c_ele not in cond:
+                cond.append(c_ele)
+
+        for uc_ele in uc:
+            if uc_ele not in uncond:
+                uncond.append(uc_ele)
 
         # Discarding eliminationVariable (as extracting everything except elimination var)
-        uncond.discard(eliminationVariable)
+        for uc_ele in uncond:
+            if uc_ele == eliminationVariable:
+                uncond.remove(eliminationVariable)
 
         #print(uncond)
                
@@ -188,20 +209,21 @@ def eliminateWithCallTracking(callTrackingList=None):
         
         # Assigning Probabilities 
         for assig in fact_comb.getAllPossibleAssignmentDicts():
-            p = 0
+            fact_prob = []
             for eli in rng:
                 assig[eliminationVariable] = eli
-                fact_prob = factor.getProbability(assig)
-                p = p + fact_prob
-            
+                fact_prob.append(factor.getProbability(assig))
+            p = sum(fact_prob)
             fact_comb.setProbability(assig, p)
 
         return fact_comb
-
+        
         #util.raiseNotDefined()
         "*** END YOUR CODE HERE ***"
-
+   
     return eliminate
+    
+        
 
 eliminate = eliminateWithCallTracking()
 
@@ -255,31 +277,37 @@ def normalize(factor):
 
     "*** YOUR CODE HERE ***"
     # As single factor, conditional and unconditional variables added directly
-
-    uncond = factor.unconditionedVariables()
-    cond = factor.conditionedVariables()
-    dom = factor.variableDomainsDict()
+    cond = []
+    uncond = []
     sum_p = 0
 
-    # Calculating probability sum
-    for assig in factor.getAllPossibleAssignmentDicts():
-        fact_prob = factor.getProbability(assig)
-        sum_p = sum_p + fact_prob 
-    
-    # Factor uncond with length 1
-    for ele in uncond:
+    c = factor.conditionedVariables()
+    uc = factor.unconditionedVariables()
+    dom = factor.variableDomainsDict()
+
+    for c_ele in c:
+        if c_ele not in cond:
+            cond.append(c_ele)
+            
+    # unconditional variables with length 1 added to conditional
+    for ele in factor.unconditionedVariables():
         l = len(dom[ele])
         if l == 1:
-            cond.add(ele)
-    uncond = []
+            cond.append(ele)
 
-    # Factor (Unassigned)
     for ele in factor.unconditionedVariables():
         if ele not in cond:
             #print(ele)
             uncond.append(ele)
-    
+
+    # Factor 
     fact_comb = Factor(uncond, cond, dom)
+    
+    # Calculating probability sum
+    fact_prob = []
+    for assig in factor.getAllPossibleAssignmentDicts():
+        fact_prob.append(factor.getProbability(assig))
+    sum_p = sum(fact_prob) 
 
     # Assigning Probabilities
     for assig in fact_comb.getAllPossibleAssignmentDicts():
@@ -292,7 +320,7 @@ def normalize(factor):
         return None
     else:
         return fact_comb
-
+    
     #util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
